@@ -109,6 +109,7 @@ namespace Yarp.ServiceFabric.FabricDiscovery.Util
                 var headerMatches = new Dictionary<string, RouteHeaderFields>();
                 var queryMatches = new Dictionary<string, RouteQueryParameterFields>();
                 var transforms = new Dictionary<string, Dictionary<string, string>>();
+                bool ignoreAppInstanceNameServiceName = false;
 
                 foreach (var kvp in labels)
                 {
@@ -273,10 +274,22 @@ namespace Yarp.ServiceFabric.FabricDiscovery.Util
                     {
                         corsPolicy = kvp.Value;
                     }
+                    else if (ContainsKey("DisableServiceInstanceDefaultPath", routeLabelKey, out _))
+                    {
+                        ignoreAppInstanceNameServiceName = true;
+                    }
                 }
 
                 // Combine default path generation (/appName/serviceName) and user defined path from yarp label in service manifest.
-                var finalPath = serviceName.AbsolutePath + path;
+                var finalPath = string.Empty;
+                if (ignoreAppInstanceNameServiceName)
+                {
+                    finalPath = path;
+                }
+                else
+                {
+                    finalPath = serviceName.AbsolutePath + path;
+                }
 
                 // Stateful/stateless service with multiple partitions
                 if (backendService.FabricService.Partitions.Count > 1)
